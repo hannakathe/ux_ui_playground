@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --no-turbopack)",
+      "Read(//d/Hannah_Abril/Proyectos/Personales/Repositories_P/ux_ui_temp/**)",
+      "Bash(cp -r ./* ../ux_ui_playground/)",
+      "Bash(cp .eslintrc.json .gitignore ../ux_ui_playground/)",
+      "Bash(cp -r .next ../ux_ui_playground/)",
+      "Bash(cp package.json package-lock.json postcss.config.mjs tsconfig.json eslint.config.mjs next.config.ts next-env.d.ts .gitignore ../ux_ui_playground/)",
+      "Bash(cp -r src public ../ux_ui_playground/)",
+      "Bash(npm install:*)"
+    ]
+  }
+}
