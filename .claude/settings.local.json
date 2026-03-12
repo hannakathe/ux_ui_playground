@@ -8,7 +8,8 @@
       "Bash(cp -r .next ../ux_ui_playground/)",
       "Bash(cp package.json package-lock.json postcss.config.mjs tsconfig.json eslint.config.mjs next.config.ts next-env.d.ts .gitignore ../ux_ui_playground/)",
       "Bash(cp -r src public ../ux_ui_playground/)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npx next:*)"
     ]
   }
 }
