@@ -1,15 +1,39 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #09090b;
-  --color-foreground: #fafafa;
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
   --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
+:root {
+  --bg: #09090b;
+  --fg: #fafafa;
+  --surface: #18181b;
+  --surface-2: #27272a;
+  --border: #27272a;
+  --border-light: #3f3f46;
+  --muted: #71717a;
+  --accent: #6366f1;
+  --accent-hover: #818cf8;
+}
+
+html.light {
+  --bg: #fafafa;
+  --fg: #18181b;
+  --surface: #ffffff;
+  --surface-2: #f4f4f5;
+  --border: #e4e4e7;
+  --border-light: #d4d4d8;
+  --muted: #71717a;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+}
+
 * {
   scrollbar-width: thin;
-  scrollbar-color: #27272a transparent;
+  scrollbar-color: var(--border) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -22,21 +46,26 @@
 }
 
 *::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: var(--border);
   border-radius: 3px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: var(--border-light);
 }
 
 body {
-  background: #09090b;
-  color: #fafafa;
+  background: var(--bg);
+  color: var(--fg);
   font-family: "Inter", system-ui, sans-serif;
   overflow: hidden;
 }
 
 .react-colorful {
   width: 100% !important;
+}
+
+/* Theme transition */
+html {
+  transition: background-color 0.2s, color 0.2s;
 }

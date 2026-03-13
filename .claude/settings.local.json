@@ -9,7 +9,8 @@
       "Bash(cp package.json package-lock.json postcss.config.mjs tsconfig.json eslint.config.mjs next.config.ts next-env.d.ts .gitignore ../ux_ui_playground/)",
       "Bash(cp -r src public ../ux_ui_playground/)",
       "Bash(npm install:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(find /d/Hannah_Abril/Proyectos/Personales/Repositories_P/ux_ui_playground/src -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.css \\\\\\))"
     ]
   }
 }

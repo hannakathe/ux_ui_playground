@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 export interface ElementStyles {
   padding: number;
@@ -53,16 +53,39 @@ export const defaultStyles: ElementStyles = {
 };
 
 export interface Preset {
+  id: string;
   name: string;
   styles: ElementStyles;
+  createdAt: number;
+}
+
+const PRESETS_KEY = "ux-playground-presets";
+
+function loadPresets(): Preset[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(PRESETS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistPresets(presets: Preset[]) {
+  localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
 }
 
 export function usePlaygroundStore() {
   const [styles, setStyles] = useState<ElementStyles>(defaultStyles);
   const [presets, setPresets] = useState<Preset[]>([]);
   const [activeComponent, setActiveComponent] = useState<string>("box");
-  const [activeTab, setActiveTab] = useState<string>("playground");
+  const [activeTab, setActiveTab] = useState<string>("home");
   const [viewportSize, setViewportSize] = useState<"desktop" | "tablet" | "mobile">("desktop");
+
+  // Load presets from localStorage on mount
+  useEffect(() => {
+    setPresets(loadPresets());
+  }, []);
 
   const updateStyle = useCallback(
     <K extends keyof ElementStyles>(key: K, value: ElementStyles[K]) => {
@@ -77,7 +100,18 @@ export function usePlaygroundStore() {
 
   const savePreset = useCallback(
     (name: string) => {
-      setPresets((prev) => [...prev, { name, styles: { ...styles } }]);
+      const preset: Preset = {
+        id: Date.now().toString(36),
+        name,
+        styles: { ...styles },
+        createdAt: Date.now(),
+      };
+      setPresets((prev) => {
+        const next = [...prev, preset];
+        persistPresets(next);
+        return next;
+      });
+      return preset;
     },
     [styles]
   );
@@ -86,8 +120,36 @@ export function usePlaygroundStore() {
     setStyles(preset.styles);
   }, []);
 
-  const deletePreset = useCallback((name: string) => {
-    setPresets((prev) => prev.filter((p) => p.name !== name));
+  const deletePreset = useCallback((id: string) => {
+    setPresets((prev) => {
+      const next = prev.filter((p) => p.id !== id);
+      persistPresets(next);
+      return next;
+    });
+  }, []);
+
+  const exportPresets = useCallback(() => {
+    const data = JSON.stringify(presets, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ux-playground-presets.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [presets]);
+
+  const importPresets = useCallback((json: string) => {
+    try {
+      const imported = JSON.parse(json) as Preset[];
+      setPresets((prev) => {
+        const next = [...prev, ...imported];
+        persistPresets(next);
+        return next;
+      });
+    } catch {
+      console.error("Invalid preset JSON");
+    }
   }, []);
 
   return {
@@ -99,6 +161,8 @@ export function usePlaygroundStore() {
     savePreset,
     loadPreset,
     deletePreset,
+    exportPresets,
+    importPresets,
     activeComponent,
     setActiveComponent,
     activeTab,

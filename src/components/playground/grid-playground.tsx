@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
+import { NumberInput } from "@/components/ui/number-input";
 import {
   Select,
   SelectContent,
@@ -10,8 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Copy, Check } from "lucide-react";
+import { CodeBlock } from "@/components/ui/code-block";
 import { cn } from "@/lib/utils";
+import type { CodeOutput } from "@/lib/code-generators";
 
 interface GridItem {
   colSpan: number;
@@ -45,21 +47,6 @@ export function GridPlayground() {
       color: defaultColors[i % defaultColors.length],
     }))
   );
-  const [copied, setCopied] = useState(false);
-
-  const cssCode = `.grid-container {
-  display: grid;
-  grid-template-columns: repeat(${columns}, 1fr);
-  grid-template-rows: repeat(${rows}, 1fr);
-  gap: ${gap}px;
-  grid-auto-flow: ${autoFlow};
-}`;
-
-  const copyCode = () => {
-    navigator.clipboard.writeText(cssCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   const updateItem = (index: number, key: keyof GridItem, value: number | string) => {
     setItems((prev) => {
@@ -69,134 +56,173 @@ export function GridPlayground() {
     });
   };
 
+  const itemChildren = Array.from({ length: itemCount }, (_, i) => `  <div>Item ${i + 1}</div>`).join("\n");
+
+  const codeOutputs: CodeOutput[] = [
+    {
+      language: "html",
+      label: "HTML",
+      syntaxLang: "html",
+      code: `<div style="display: grid; grid-template-columns: repeat(${columns}, 1fr); grid-template-rows: repeat(${rows}, 1fr); gap: ${gap}px; grid-auto-flow: ${autoFlow};">\n${itemChildren}\n</div>`,
+    },
+    {
+      language: "css",
+      label: "CSS",
+      syntaxLang: "css",
+      code: `.grid-container {\n  display: grid;\n  grid-template-columns: repeat(${columns}, 1fr);\n  grid-template-rows: repeat(${rows}, 1fr);\n  gap: ${gap}px;\n  grid-auto-flow: ${autoFlow};\n}`,
+    },
+    {
+      language: "javascript",
+      label: "JavaScript",
+      syntaxLang: "javascript",
+      code: `const el = document.querySelector('.grid-container');\nel.style.display = "grid";\nel.style.gridTemplateColumns = "repeat(${columns}, 1fr)";\nel.style.gridTemplateRows = "repeat(${rows}, 1fr)";\nel.style.gap = "${gap}px";\nel.style.gridAutoFlow = "${autoFlow}";`,
+    },
+    {
+      language: "react",
+      label: "React",
+      syntaxLang: "jsx",
+      code: `<div\n  style={{\n    display: "grid",\n    gridTemplateColumns: "repeat(${columns}, 1fr)",\n    gridTemplateRows: "repeat(${rows}, 1fr)",\n    gap: ${gap},\n    gridAutoFlow: "${autoFlow}",\n  }}\n>\n${itemChildren}\n</div>`,
+    },
+    {
+      language: "tailwind",
+      label: "Tailwind",
+      syntaxLang: "jsx",
+      code: `<div className="grid grid-cols-${columns} grid-rows-${rows} gap-[${gap}px]${autoFlow !== "row" ? ` grid-flow-${autoFlow}` : ""}">\n${itemChildren}\n</div>`,
+    },
+  ];
+
   return (
-    <div className="flex-1 flex overflow-hidden">
-      <div className="w-64 bg-zinc-950 border-r border-zinc-800 p-4 space-y-4 overflow-y-auto">
-        <div>
-          <h3 className="text-sm font-semibold text-white mb-1">CSS Grid</h3>
-          <p className="text-xs text-zinc-500">Advanced grid layout editor</p>
-        </div>
-
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <div className="flex justify-between">
-              <label className="text-xs text-zinc-400">Columns</label>
-              <span className="text-xs text-zinc-500 font-mono">{columns}</span>
-            </div>
-            <Slider value={[columns]} min={1} max={6} onValueChange={([v]) => setColumns(v)} />
-          </div>
-          <div className="space-y-1">
-            <div className="flex justify-between">
-              <label className="text-xs text-zinc-400">Rows</label>
-              <span className="text-xs text-zinc-500 font-mono">{rows}</span>
-            </div>
-            <Slider value={[rows]} min={1} max={6} onValueChange={([v]) => setRows(v)} />
-          </div>
-          <div className="space-y-1">
-            <div className="flex justify-between">
-              <label className="text-xs text-zinc-400">Gap</label>
-              <span className="text-xs text-zinc-500 font-mono">{gap}px</span>
-            </div>
-            <Slider value={[gap]} min={0} max={32} onValueChange={([v]) => setGap(v)} />
-          </div>
-          <div className="space-y-1">
-            <div className="flex justify-between">
-              <label className="text-xs text-zinc-400">Items</label>
-              <span className="text-xs text-zinc-500 font-mono">{itemCount}</span>
-            </div>
-            <Slider value={[itemCount]} min={1} max={12} onValueChange={([v]) => setItemCount(v)} />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs text-zinc-400">Auto Flow</label>
-            <Select value={autoFlow} onValueChange={setAutoFlow}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="row">Row</SelectItem>
-                <SelectItem value="column">Column</SelectItem>
-                <SelectItem value="dense">Dense</SelectItem>
-              </SelectContent>
-            </Select>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex overflow-hidden">
+        {/* Preview */}
+        <div className="flex-1 bg-[var(--bg)] flex items-center justify-center p-10 overflow-auto">
+          <div
+            className="w-full max-w-3xl bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6"
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${columns}, 1fr)`,
+              gridTemplateRows: `repeat(${rows}, minmax(80px, 1fr))`,
+              gap: `${gap}px`,
+              gridAutoFlow: autoFlow,
+            }}
+          >
+            {items.slice(0, itemCount).map((item, i) => (
+              <motion.div
+                key={i}
+                layout
+                onClick={() => setSelectedItem(i === selectedItem ? null : i)}
+                className={cn(
+                  "rounded-lg flex items-center justify-center text-white text-sm font-medium cursor-pointer transition-all min-h-[60px]",
+                  item.color,
+                  selectedItem === i && "ring-2 ring-white ring-offset-2 ring-offset-[var(--bg)]"
+                )}
+                style={{
+                  gridColumn: `span ${item.colSpan}`,
+                  gridRow: `span ${item.rowSpan}`,
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {i + 1}
+              </motion.div>
+            ))}
           </div>
         </div>
 
-        {selectedItem !== null && (
-          <div className="pt-3 border-t border-zinc-800 space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-              Item {selectedItem + 1}
-            </p>
-            <div className="space-y-1">
-              <div className="flex justify-between">
-                <label className="text-xs text-zinc-400">Column Span</label>
-                <span className="text-xs text-zinc-500 font-mono">{items[selectedItem].colSpan}</span>
+        {/* Right controls */}
+        <aside className="w-72 bg-[var(--surface)] border-l border-[var(--border)] overflow-y-auto p-5 space-y-6">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-400/80 mb-4">Grid Settings</p>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs text-[var(--fg)] font-medium">Columns</label>
+                  <NumberInput value={columns} onChange={setColumns} min={1} max={6} unit="" />
+                </div>
+                <Slider value={[columns]} min={1} max={6} onValueChange={([v]) => setColumns(v)} />
               </div>
-              <Slider
-                value={[items[selectedItem].colSpan]}
-                min={1}
-                max={columns}
-                onValueChange={([v]) => updateItem(selectedItem, "colSpan", v)}
-              />
-            </div>
-            <div className="space-y-1">
-              <div className="flex justify-between">
-                <label className="text-xs text-zinc-400">Row Span</label>
-                <span className="text-xs text-zinc-500 font-mono">{items[selectedItem].rowSpan}</span>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs text-[var(--fg)] font-medium">Rows</label>
+                  <NumberInput value={rows} onChange={setRows} min={1} max={6} unit="" />
+                </div>
+                <Slider value={[rows]} min={1} max={6} onValueChange={([v]) => setRows(v)} />
               </div>
-              <Slider
-                value={[items[selectedItem].rowSpan]}
-                min={1}
-                max={rows}
-                onValueChange={([v]) => updateItem(selectedItem, "rowSpan", v)}
-              />
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs text-[var(--fg)] font-medium">Gap</label>
+                  <NumberInput value={gap} onChange={setGap} min={0} max={32} />
+                </div>
+                <Slider value={[gap]} min={0} max={32} onValueChange={([v]) => setGap(v)} />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs text-[var(--fg)] font-medium">Items</label>
+                  <NumberInput value={itemCount} onChange={setItemCount} min={1} max={12} unit="" />
+                </div>
+                <Slider value={[itemCount]} min={1} max={12} onValueChange={([v]) => setItemCount(v)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-[var(--fg)] font-medium">Auto Flow</label>
+                <Select value={autoFlow} onValueChange={setAutoFlow}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="row">Row</SelectItem>
+                    <SelectItem value="column">Column</SelectItem>
+                    <SelectItem value="dense">Dense</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
-        )}
 
-        <div className="pt-3 border-t border-zinc-800 relative">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">CSS</p>
-            <button onClick={copyCode} className="p-1 rounded text-zinc-500 hover:text-white">
-              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-            </button>
-          </div>
-          <pre className="text-[11px] text-zinc-400 font-mono bg-zinc-900 rounded-lg p-3">
-            {cssCode}
-          </pre>
-        </div>
+          {selectedItem !== null && (
+            <div className="pt-4 border-t border-[var(--border)] space-y-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-400/80">
+                Item {selectedItem + 1}
+              </p>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs text-[var(--fg)] font-medium">Column Span</label>
+                  <NumberInput
+                    value={items[selectedItem].colSpan}
+                    onChange={(v) => updateItem(selectedItem, "colSpan", v)}
+                    min={1}
+                    max={columns}
+                    unit=""
+                  />
+                </div>
+                <Slider
+                  value={[items[selectedItem].colSpan]}
+                  min={1}
+                  max={columns}
+                  onValueChange={([v]) => updateItem(selectedItem, "colSpan", v)}
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs text-[var(--fg)] font-medium">Row Span</label>
+                  <NumberInput
+                    value={items[selectedItem].rowSpan}
+                    onChange={(v) => updateItem(selectedItem, "rowSpan", v)}
+                    min={1}
+                    max={rows}
+                    unit=""
+                  />
+                </div>
+                <Slider
+                  value={[items[selectedItem].rowSpan]}
+                  min={1}
+                  max={rows}
+                  onValueChange={([v]) => updateItem(selectedItem, "rowSpan", v)}
+                />
+              </div>
+            </div>
+          )}
+        </aside>
       </div>
 
-      <div className="flex-1 bg-zinc-900 flex items-center justify-center p-8">
-        <div
-          className="w-full max-w-3xl bg-zinc-900/50 border border-zinc-800 rounded-xl p-6"
-          style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${columns}, 1fr)`,
-            gridTemplateRows: `repeat(${rows}, minmax(80px, 1fr))`,
-            gap: `${gap}px`,
-            gridAutoFlow: autoFlow,
-          }}
-        >
-          {items.slice(0, itemCount).map((item, i) => (
-            <motion.div
-              key={i}
-              layout
-              onClick={() => setSelectedItem(i === selectedItem ? null : i)}
-              className={cn(
-                "rounded-lg flex items-center justify-center text-white text-sm font-medium cursor-pointer transition-all min-h-[60px]",
-                item.color,
-                selectedItem === i && "ring-2 ring-white ring-offset-2 ring-offset-zinc-900"
-              )}
-              style={{
-                gridColumn: `span ${item.colSpan}`,
-                gridRow: `span ${item.rowSpan}`,
-              }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {i + 1}
-            </motion.div>
-          ))}
-        </div>
-      </div>
+      <CodeBlock outputs={codeOutputs} />
     </div>
   );
 }

@@ -2,19 +2,21 @@
 
 import { motion } from "framer-motion";
 import type { ElementStyles } from "@/hooks/use-playground-store";
+import type { ViewportConfig } from "@/components/layout/viewport-toolbar";
 
 interface CanvasProps {
   styles: ElementStyles;
-  viewportSize: "desktop" | "tablet" | "mobile";
+  viewport: ViewportConfig;
 }
 
-const viewportWidths = {
-  desktop: "100%",
-  tablet: "768px",
-  mobile: "375px",
-};
+export function Canvas({ styles, viewport }: CanvasProps) {
+  const w = viewport.device
+    ? viewport.rotated ? viewport.device.height : viewport.device.width
+    : viewport.customWidth;
+  const h = viewport.device
+    ? viewport.rotated ? viewport.device.width : viewport.device.height
+    : viewport.customHeight;
 
-export function Canvas({ styles, viewportSize }: CanvasProps) {
   const containerStyle: React.CSSProperties = {
     display: styles.display,
     ...(styles.display === "flex" && {
@@ -38,26 +40,23 @@ export function Canvas({ styles, viewportSize }: CanvasProps) {
     color: styles.textColor,
     fontSize: `${styles.fontSize}px`,
     fontWeight: styles.fontWeight,
-    border:
-      styles.borderWidth > 0
-        ? `${styles.borderWidth}px solid ${styles.borderColor}`
-        : "none",
-    boxShadow: styles.shadow,
+    border: styles.borderWidth > 0 ? `${styles.borderWidth}px solid ${styles.borderColor}` : "none",
+    boxShadow: styles.shadow !== "none" ? styles.shadow : undefined,
     opacity: styles.opacity / 100,
   };
 
   return (
-    <div className="flex-1 bg-zinc-900 overflow-auto flex items-center justify-center p-8">
+    <div className="flex-1 bg-[var(--bg)] overflow-auto flex items-center justify-center p-10">
       <div
-        className="bg-zinc-900/50 rounded-xl border border-zinc-800 flex items-center justify-center min-h-[400px]"
+        className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] flex items-center justify-center"
         style={{
-          width: viewportWidths[viewportSize],
+          width: w > 0 ? `${w}px` : "100%",
+          height: h > 0 ? `${h}px` : undefined,
+          minHeight: 400,
           maxWidth: "100%",
         }}
       >
-        {/* Spacing visualizer overlay */}
         <div className="relative">
-          {/* Margin indicator */}
           {styles.margin > 0 && (
             <div
               className="absolute border border-dashed border-orange-400/30 pointer-events-none"
@@ -70,21 +69,16 @@ export function Canvas({ styles, viewportSize }: CanvasProps) {
               }}
             />
           )}
-
-          {/* The actual element */}
           <motion.div
             layout
             transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
             style={containerStyle}
             className="relative"
           >
-            {/* Padding indicator */}
             {styles.padding > 0 && (
               <div
                 className="absolute inset-0 border border-dashed border-green-400/20 pointer-events-none"
-                style={{
-                  borderRadius: `${styles.borderRadius}px`,
-                }}
+                style={{ borderRadius: `${styles.borderRadius}px` }}
               />
             )}
             <span className="select-none">Content</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { HexColorPicker } from "react-colorful";
 import { Copy, Check, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
@@ -15,6 +15,8 @@ import {
   hslToHex,
 } from "@/lib/color-utils";
 import { Slider } from "@/components/ui/slider";
+import { CodeBlock } from "@/components/ui/code-block";
+import type { CodeOutput } from "@/lib/code-generators";
 import { cn } from "@/lib/utils";
 
 type PaletteType =
@@ -54,6 +56,42 @@ function ColorSwatch({ color, large = false }: { color: string; large?: boolean 
       </span>
     </motion.button>
   );
+}
+
+function generateCodeOutputs(palette: string[]): CodeOutput[] {
+  const cssVars = palette
+    .map((color, i) => `  --color-${i + 1}: ${color};`)
+    .join("\n");
+  const cssCode = `:root {\n${cssVars}\n}`;
+
+  const scssVars = palette
+    .map((color, i) => `$color-${i + 1}: ${color};`)
+    .join("\n");
+
+  const twColors = palette.reduce(
+    (acc, color, i) => {
+      acc[`palette-${i + 1}`] = color;
+      return acc;
+    },
+    {} as Record<string, string>
+  );
+  const twCode = `// tailwind.config.js\nmodule.exports = {\n  theme: {\n    extend: {\n      colors: ${JSON.stringify(twColors, null, 8).replace(/^/gm, "      ").trim()},\n    },\n  },\n};`;
+
+  const tokens = palette.reduce(
+    (acc, color, i) => {
+      acc[`color-${i + 1}`] = color;
+      return acc;
+    },
+    {} as Record<string, string>
+  );
+  const jsonCode = JSON.stringify({ palette: tokens }, null, 2);
+
+  return [
+    { language: "css", label: "CSS Variables", code: cssCode, syntaxLang: "css" },
+    { language: "scss", label: "SCSS Variables", code: scssVars, syntaxLang: "scss" },
+    { language: "javascript", label: "Tailwind Config", code: twCode, syntaxLang: "javascript" },
+    { language: "javascript" as CodeOutput["language"], label: "JSON Tokens", code: jsonCode, syntaxLang: "json" },
+  ];
 }
 
 export function ColorPalette() {
@@ -116,115 +154,66 @@ export function ColorPalette() {
     navigator.clipboard.writeText(JSON.stringify(tokens, null, 2));
   };
 
+  const codeOutputs = useMemo(() => generateCodeOutputs(palette), [palette]);
+
   return (
-    <div className="flex-1 overflow-auto p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-white">Color Palette Generator</h2>
-            <p className="text-sm text-zinc-400 mt-1">
-              Create and explore color palettes
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={randomColor}
-              className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white text-sm rounded-md transition-colors"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Random
-            </button>
-            <button
-              onClick={exportTokens}
-              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-md transition-colors"
-            >
-              Export Tokens
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-[280px_1fr] gap-8">
-          {/* Color Picker */}
-          <div className="space-y-4">
-            <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-4 space-y-4">
-              <HexColorPicker
-                color={baseColor}
-                onChange={updateBaseColor}
-                style={{ width: "100%" }}
-              />
-              <input
-                type="text"
-                value={baseColor}
-                onChange={(e) => updateBaseColor(e.target.value)}
-                className="w-full h-8 px-3 rounded-md bg-zinc-800 border border-zinc-700 text-sm text-white font-mono"
-              />
-            </div>
-
-            <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-4 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                HSL Controls
-              </p>
-              <div className="space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-xs text-zinc-400">Hue</span>
-                  <span className="text-xs text-zinc-500 font-mono">{hsl[0]}°</span>
-                </div>
-                <Slider
-                  value={[hsl[0]]}
-                  min={0}
-                  max={360}
-                  onValueChange={([v]) => updateHsl(0, v)}
-                />
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Main area: preview + side panel */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Main content area */}
+        <div className="flex-1 bg-[var(--bg)] overflow-auto p-10">
+          <div className="max-w-3xl mx-auto space-y-8">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-[var(--fg)]">Color Palette Generator</h2>
+                <p className="text-sm text-[var(--muted)] mt-1">
+                  Create and explore color palettes
+                </p>
               </div>
-              <div className="space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-xs text-zinc-400">Saturation</span>
-                  <span className="text-xs text-zinc-500 font-mono">{hsl[1]}%</span>
-                </div>
-                <Slider
-                  value={[hsl[1]]}
-                  min={0}
-                  max={100}
-                  onValueChange={([v]) => updateHsl(1, v)}
-                />
-              </div>
-              <div className="space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-xs text-zinc-400">Lightness</span>
-                  <span className="text-xs text-zinc-500 font-mono">{hsl[2]}%</span>
-                </div>
-                <Slider
-                  value={[hsl[2]]}
-                  min={0}
-                  max={100}
-                  onValueChange={([v]) => updateHsl(2, v)}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Palettes */}
-          <div className="space-y-6">
-            <div className="flex flex-wrap gap-2">
-              {paletteTypes.map((pt) => (
+              <div className="flex gap-2">
                 <button
-                  key={pt.id}
-                  onClick={() => setPaletteType(pt.id)}
-                  className={cn(
-                    "px-3 py-1.5 rounded-md text-sm transition-colors",
-                    paletteType === pt.id
-                      ? "bg-indigo-600 text-white"
-                      : "bg-zinc-800 text-zinc-400 hover:text-white"
-                  )}
+                  onClick={randomColor}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-[var(--surface-2)] hover:bg-[var(--border)] text-[var(--fg)] text-sm rounded-md transition-colors"
                 >
-                  {pt.label}
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Random
                 </button>
-              ))}
+                <button
+                  onClick={exportTokens}
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-md transition-colors"
+                >
+                  Export Tokens
+                </button>
+              </div>
+            </div>
+
+            {/* Palette type buttons */}
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-400/80 mb-3">
+                Palette Type
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {paletteTypes.map((pt) => (
+                  <button
+                    key={pt.id}
+                    onClick={() => setPaletteType(pt.id)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-md text-sm transition-colors",
+                      paletteType === pt.id
+                        ? "bg-indigo-600 text-white"
+                        : "bg-[var(--surface-2)] text-[var(--muted)] hover:text-[var(--fg)]"
+                    )}
+                  >
+                    {pt.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Generated palette */}
-            <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-6">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-4">
+            <div className="bg-[var(--surface)] rounded-xl border border-[var(--border)] p-6">
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-400/80 mb-4">
                 Generated Palette
               </p>
               <div className="flex gap-3">
@@ -235,8 +224,8 @@ export function ColorPalette() {
             </div>
 
             {/* Preview in context */}
-            <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-6">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-4">
+            <div className="bg-[var(--surface)] rounded-xl border border-[var(--border)] p-6">
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-400/80 mb-4">
                 Preview
               </p>
               <div className="space-y-3">
@@ -247,7 +236,7 @@ export function ColorPalette() {
                       className="px-4 py-2 rounded-md text-sm font-medium transition-opacity hover:opacity-80"
                       style={{
                         backgroundColor: color,
-                        color: i === 0 ? "#fff" : "#fff",
+                        color: "#fff",
                       }}
                     >
                       Button {i + 1}
@@ -275,7 +264,95 @@ export function ColorPalette() {
             </div>
           </div>
         </div>
+
+        {/* Right side panel: Color Picker + HSL Controls */}
+        <div className="w-72 bg-[var(--surface)] border-l border-[var(--border)] overflow-y-auto p-5 space-y-6">
+          {/* Color Picker */}
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-400/80 mb-3">
+              Base Color
+            </p>
+            <div className="space-y-4">
+              <HexColorPicker
+                color={baseColor}
+                onChange={updateBaseColor}
+                style={{ width: "100%" }}
+              />
+              <input
+                type="text"
+                value={baseColor}
+                onChange={(e) => updateBaseColor(e.target.value)}
+                className="w-full h-8 px-3 rounded-md bg-[var(--surface-2)] border border-[var(--border)] text-sm text-[var(--fg)] font-mono"
+              />
+            </div>
+          </div>
+
+          {/* HSL Controls */}
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-400/80 mb-3">
+              HSL Controls
+            </p>
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-xs text-[var(--muted)]">Hue</span>
+                  <span className="text-xs text-[var(--muted)] font-mono">{hsl[0]}°</span>
+                </div>
+                <Slider
+                  value={[hsl[0]]}
+                  min={0}
+                  max={360}
+                  onValueChange={([v]) => updateHsl(0, v)}
+                />
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-xs text-[var(--muted)]">Saturation</span>
+                  <span className="text-xs text-[var(--muted)] font-mono">{hsl[1]}%</span>
+                </div>
+                <Slider
+                  value={[hsl[1]]}
+                  min={0}
+                  max={100}
+                  onValueChange={([v]) => updateHsl(1, v)}
+                />
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-xs text-[var(--muted)]">Lightness</span>
+                  <span className="text-xs text-[var(--muted)] font-mono">{hsl[2]}%</span>
+                </div>
+                <Slider
+                  value={[hsl[2]]}
+                  min={0}
+                  max={100}
+                  onValueChange={([v]) => updateHsl(2, v)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Color info */}
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-400/80 mb-3">
+              Color Info
+            </p>
+            <div className="space-y-2 text-xs text-[var(--muted)] font-mono">
+              <div className="flex justify-between">
+                <span>HEX</span>
+                <span className="text-[var(--fg)]">{baseColor}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>HSL</span>
+                <span className="text-[var(--fg)]">{hsl[0]}° {hsl[1]}% {hsl[2]}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Code output block */}
+      <CodeBlock outputs={codeOutputs} />
     </div>
   );
 }
