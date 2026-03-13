@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { Copy, Check, ChevronRight, X, Bell, AlertTriangle, Info, User, Search, Menu, Heart, Star, ArrowRight, Plus, Settings, Mail } from "lucide-react";
+import { Copy, Check, X, AlertTriangle, Info, User } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
+import { CodeBlock } from "@/components/ui/code-block";
 import { cn } from "@/lib/utils";
+import type { CodeOutput } from "@/lib/code-generators";
 
 interface ComponentConfig {
   id: string;
@@ -40,17 +40,14 @@ const components: ComponentConfig[] = [
     render: (props) => {
       const variants: Record<string, string> = {
         primary: "bg-indigo-600 hover:bg-indigo-700 text-white",
-        secondary: "bg-zinc-700 hover:bg-zinc-600 text-white",
-        outline: "border border-zinc-600 hover:bg-zinc-800 text-white",
-        ghost: "hover:bg-zinc-800 text-zinc-300",
+        secondary: "bg-[var(--surface-2)] hover:bg-[var(--border)] text-[var(--fg)]",
+        outline: "border border-[var(--border)] hover:bg-[var(--surface-2)] text-[var(--fg)]",
+        ghost: "hover:bg-[var(--surface-2)] text-[var(--muted)]",
         destructive: "bg-red-600 hover:bg-red-700 text-white",
       };
       const sizes: Record<string, string> = { sm: "px-3 py-1 text-xs", md: "px-4 py-2 text-sm", lg: "px-6 py-3 text-base" };
       return (
-        <button
-          className={cn("font-medium transition-colors", variants[props.variant as string], sizes[props.size as string])}
-          style={{ borderRadius: `${props.rounded}px` }}
-        >
+        <button className={cn("font-medium transition-colors", variants[props.variant as string], sizes[props.size as string])} style={{ borderRadius: `${props.rounded}px` }}>
           {props.label as string}
         </button>
       );
@@ -70,14 +67,14 @@ const components: ComponentConfig[] = [
     render: (props) => {
       const sizes: Record<string, string> = { sm: "h-8 text-xs px-2", md: "h-10 text-sm px-3", lg: "h-12 text-base px-4" };
       const variants: Record<string, string> = {
-        default: "border border-zinc-700 bg-zinc-900 rounded-md",
-        filled: "bg-zinc-800 border-none rounded-md",
-        underline: "border-b border-zinc-700 bg-transparent rounded-none",
+        default: "border border-[var(--border)] bg-[var(--surface)] rounded-md",
+        filled: "bg-[var(--surface-2)] border-none rounded-md",
+        underline: "border-b border-[var(--border)] bg-transparent rounded-none",
       };
       return (
         <input
           placeholder={props.placeholder as string}
-          className={cn("text-white placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-64", sizes[props.size as string], variants[props.variant as string])}
+          className={cn("text-[var(--fg)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-1 focus:ring-indigo-500 w-64", sizes[props.size as string], variants[props.variant as string])}
         />
       );
     },
@@ -97,12 +94,10 @@ const components: ComponentConfig[] = [
     render: (props) => {
       const shadows: Record<string, string> = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg" };
       return (
-        <div className={cn("bg-zinc-800 border border-zinc-700 p-6 w-72", shadows[props.shadow as string])} style={{ borderRadius: `${props.rounded}px` }}>
-          <h3 className="text-white font-semibold text-lg">{props.title as string}</h3>
-          <p className="text-zinc-400 text-sm mt-2">{props.description as string}</p>
-          <button className="mt-4 px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors">
-            Action
-          </button>
+        <div className={cn("bg-[var(--surface-2)] border border-[var(--border)] p-6 w-72", shadows[props.shadow as string])} style={{ borderRadius: `${props.rounded}px` }}>
+          <h3 className="text-[var(--fg)] font-semibold text-lg">{props.title as string}</h3>
+          <p className="text-[var(--muted)] text-sm mt-2">{props.description as string}</p>
+          <button className="mt-4 px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors">Action</button>
         </div>
       );
     },
@@ -119,7 +114,7 @@ const components: ComponentConfig[] = [
     ],
     render: (props) => {
       const variants: Record<string, string> = {
-        default: "bg-zinc-700 text-zinc-200",
+        default: "bg-[var(--surface-2)] text-[var(--fg)]",
         success: "bg-green-900/50 text-green-400 border border-green-800",
         warning: "bg-yellow-900/50 text-yellow-400 border border-yellow-800",
         error: "bg-red-900/50 text-red-400 border border-red-800",
@@ -151,8 +146,8 @@ const components: ComponentConfig[] = [
         <div className={cn("flex items-start gap-3 p-4 rounded-lg border w-80", v.bg, v.border)}>
           <div className="mt-0.5">{v.icon}</div>
           <div>
-            <p className="text-white text-sm font-medium">{props.title as string}</p>
-            <p className="text-zinc-400 text-xs mt-1">{props.description as string}</p>
+            <p className="text-[var(--fg)] text-sm font-medium">{props.title as string}</p>
+            <p className="text-[var(--muted)] text-xs mt-1">{props.description as string}</p>
           </div>
         </div>
       );
@@ -198,10 +193,10 @@ const components: ComponentConfig[] = [
       };
       return (
         <div className="relative group">
-          <button className="px-4 py-2 bg-zinc-800 text-white text-sm rounded-md border border-zinc-700 hover:bg-zinc-700 transition-colors">
+          <button className="px-4 py-2 bg-[var(--surface-2)] text-[var(--fg)] text-sm rounded-md border border-[var(--border)] hover:bg-[var(--border)] transition-colors">
             {props.label as string}
           </button>
-          <div className={cn("absolute hidden group-hover:block px-3 py-1.5 bg-zinc-700 text-white text-xs rounded-md whitespace-nowrap z-10", positions[props.position as string])}>
+          <div className={cn("absolute hidden group-hover:block px-3 py-1.5 bg-[var(--surface-2)] text-[var(--fg)] text-xs rounded-md whitespace-nowrap z-10 border border-[var(--border)]", positions[props.position as string])}>
             {props.tooltip as string}
           </div>
         </div>
@@ -220,9 +215,9 @@ const components: ComponentConfig[] = [
     render: (props) => {
       const items = ["Overview", "Settings", "Analytics"];
       const variants: Record<string, { container: string; active: string; inactive: string }> = {
-        default: { container: "bg-zinc-900 rounded-lg p-1", active: "bg-zinc-800 text-white rounded-md", inactive: "text-zinc-400" },
-        pills: { container: "gap-2", active: "bg-indigo-600 text-white rounded-full", inactive: "text-zinc-400 hover:text-white" },
-        underline: { container: "border-b border-zinc-800 gap-4", active: "text-white border-b-2 border-indigo-500 -mb-px", inactive: "text-zinc-400 pb-px" },
+        default: { container: "bg-[var(--surface)] rounded-lg p-1", active: "bg-[var(--surface-2)] text-[var(--fg)] rounded-md", inactive: "text-[var(--muted)]" },
+        pills: { container: "gap-2", active: "bg-indigo-600 text-white rounded-full", inactive: "text-[var(--muted)] hover:text-[var(--fg)]" },
+        underline: { container: "border-b border-[var(--border)] gap-4", active: "text-[var(--fg)] border-b-2 border-indigo-500 -mb-px", inactive: "text-[var(--muted)] pb-px" },
       };
       const v = variants[props.variant as string];
       return (
@@ -239,14 +234,13 @@ const components: ComponentConfig[] = [
   },
 ];
 
-const categories = Array.from(new Set(components.map((c) => c.category)));
+const categoriesList = Array.from(new Set(components.map((c) => c.category)));
 
 export function ComponentExplorer() {
   const [selectedId, setSelectedId] = useState("button");
   const [componentProps, setComponentProps] = useState<Record<string, Record<string, unknown>>>(
     Object.fromEntries(components.map((c) => [c.id, { ...c.defaultProps }]))
   );
-  const [copiedCode, setCopiedCode] = useState(false);
 
   const selected = components.find((c) => c.id === selectedId)!;
   const props = componentProps[selectedId];
@@ -260,45 +254,37 @@ export function ComponentExplorer() {
 
   const code = selected.code(props);
 
-  const copyCode = () => {
-    navigator.clipboard.writeText(code);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
-  };
+  const codeOutputs: CodeOutput[] = [
+    { language: "react", label: "React", syntaxLang: "jsx", code },
+    { language: "html", label: "HTML", syntaxLang: "html", code: `<!-- ${selected.name} Component -->\n${code}` },
+  ];
 
   return (
-    <div className="flex flex-1 h-full overflow-hidden">
-      {/* Component list */}
-      <div className="w-52 bg-zinc-950 border-r border-zinc-800 overflow-y-auto">
-        {categories.map((cat) => (
-          <div key={cat}>
-            <p className="px-4 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-              {cat}
-            </p>
-            {components
-              .filter((c) => c.category === cat)
-              .map((c) => (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex overflow-hidden">
+        {/* Component list */}
+        <div className="w-48 bg-[var(--surface)] border-r border-[var(--border)] overflow-y-auto shrink-0">
+          {categoriesList.map((cat) => (
+            <div key={cat}>
+              <p className="px-4 pt-4 pb-1 text-[10px] font-bold uppercase tracking-[0.15em] text-indigo-400/80">{cat}</p>
+              {components.filter((c) => c.category === cat).map((c) => (
                 <button
                   key={c.id}
                   onClick={() => setSelectedId(c.id)}
                   className={cn(
-                    "w-full text-left px-4 py-1.5 text-sm transition-colors",
-                    selectedId === c.id
-                      ? "text-white bg-zinc-800"
-                      : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+                    "w-full text-left px-4 py-2 text-sm transition-colors",
+                    selectedId === c.id ? "text-[var(--fg)] bg-indigo-600/10 border-r-2 border-indigo-500" : "text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-2)]"
                   )}
                 >
                   {c.name}
                 </button>
               ))}
-          </div>
-        ))}
-      </div>
+            </div>
+          ))}
+        </div>
 
-      {/* Preview + Controls */}
-      <div className="flex-1 flex flex-col">
         {/* Preview */}
-        <div className="flex-1 bg-zinc-900 flex items-center justify-center p-8">
+        <div className="flex-1 bg-[var(--bg)] flex items-center justify-center p-10 overflow-auto">
           <motion.div
             key={selectedId}
             initial={{ opacity: 0, scale: 0.95 }}
@@ -309,29 +295,27 @@ export function ComponentExplorer() {
           </motion.div>
         </div>
 
-        {/* Controls */}
-        <div className="h-56 bg-zinc-950 border-t border-zinc-800 flex">
-          <div className="w-64 border-r border-zinc-800 p-4 overflow-y-auto">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">
-              Controls
-            </p>
-            <div className="space-y-3">
+        {/* Right controls */}
+        <aside className="w-72 bg-[var(--surface)] border-l border-[var(--border)] overflow-y-auto p-5 space-y-6">
+          <div>
+            <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-400/80 mb-4">Controls</h3>
+            <div className="space-y-4">
               {selected.controls.map((ctrl) => (
-                <div key={ctrl.key} className="space-y-1">
-                  <label className="text-xs text-zinc-400">{ctrl.label}</label>
+                <div key={ctrl.key} className="space-y-2">
+                  <label className="text-xs text-[var(--fg)] font-medium">{ctrl.label}</label>
                   {ctrl.type === "text" && (
                     <input
                       type="text"
                       value={props[ctrl.key] as string}
                       onChange={(e) => updateProp(ctrl.key, e.target.value)}
-                      className="w-full h-7 px-2 rounded bg-zinc-800 border border-zinc-700 text-xs text-white"
+                      className="w-full h-8 px-3 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-xs text-[var(--fg)] focus:outline-none focus:border-indigo-500"
                     />
                   )}
                   {ctrl.type === "select" && (
                     <select
                       value={props[ctrl.key] as string}
                       onChange={(e) => updateProp(ctrl.key, e.target.value)}
-                      className="w-full h-7 px-2 rounded bg-zinc-800 border border-zinc-700 text-xs text-white"
+                      className="w-full h-8 px-2 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-xs text-[var(--fg)]"
                     >
                       {ctrl.options!.map((o) => (
                         <option key={o} value={o}>{o}</option>
@@ -351,38 +335,17 @@ export function ComponentExplorer() {
                       type="color"
                       value={props[ctrl.key] as string}
                       onChange={(e) => updateProp(ctrl.key, e.target.value)}
-                      className="w-full h-7 rounded bg-zinc-800 border border-zinc-700 cursor-pointer"
+                      className="w-full h-8 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] cursor-pointer"
                     />
                   )}
                 </div>
               ))}
             </div>
           </div>
-          <div className="flex-1 p-4 overflow-auto relative">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">
-              Code
-            </p>
-            <button
-              onClick={copyCode}
-              className="absolute top-4 right-4 p-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
-            >
-              {copiedCode ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-            </button>
-            <SyntaxHighlighter
-              language="jsx"
-              style={oneDark}
-              customStyle={{
-                margin: 0,
-                borderRadius: "8px",
-                fontSize: "12px",
-                background: "#18181b",
-              }}
-            >
-              {code}
-            </SyntaxHighlighter>
-          </div>
-        </div>
+        </aside>
       </div>
+
+      <CodeBlock outputs={codeOutputs} />
     </div>
   );
 }

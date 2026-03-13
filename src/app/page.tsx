@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { LeftSidebar } from "@/components/layout/left-sidebar";
 import { ViewportToolbar, type ViewportConfig } from "@/components/layout/viewport-toolbar";
 import { PropertyEditor } from "@/components/panels/property-editor";
-import { CodePanel } from "@/components/panels/code-panel";
+import { generatePlaygroundCode } from "@/components/panels/code-panel";
 import { Canvas } from "@/components/playground/canvas";
+import { PlaygroundShell } from "@/components/layout/playground-shell";
 import { ComponentExplorer } from "@/components/playground/component-explorer";
 import { ColorPalette } from "@/components/playground/color-palette";
 import { LayoutPlayground } from "@/components/playground/layout-playground";
@@ -34,8 +35,6 @@ export default function Home() {
     rotated: false,
   });
 
-  const showPropertyPanel = store.activeTab === "playground";
-  const showCodePanel = store.activeTab === "playground";
   const showToolbar = store.activeTab !== "home";
 
   const handleSave = () => {
@@ -48,10 +47,27 @@ export default function Home() {
     return <Hero onEnter={() => store.setActiveTab("playground")} />;
   }
 
+  const playgroundCodeOutputs = useMemo(
+    () => generatePlaygroundCode(store.styles),
+    [store.styles]
+  );
+
   const renderContent = () => {
     switch (store.activeTab) {
       case "playground":
-        return <Canvas styles={store.styles} viewport={viewport} />;
+        return (
+          <PlaygroundShell
+            configPanel={
+              <PropertyEditor
+                styles={store.styles}
+                onUpdateStyle={store.updateStyle}
+              />
+            }
+            codeOutputs={playgroundCodeOutputs}
+          >
+            <Canvas styles={store.styles} viewport={viewport} />
+          </PlaygroundShell>
+        );
       case "components":
         return <ComponentExplorer />;
       case "layout":
@@ -79,14 +95,26 @@ export default function Home() {
       case "desktop-patterns":
         return <DesktopPatterns />;
       default:
-        return <Canvas styles={store.styles} viewport={viewport} />;
+        return (
+          <PlaygroundShell
+            configPanel={
+              <PropertyEditor
+                styles={store.styles}
+                onUpdateStyle={store.updateStyle}
+              />
+            }
+            codeOutputs={playgroundCodeOutputs}
+          >
+            <Canvas styles={store.styles} viewport={viewport} />
+          </PlaygroundShell>
+        );
     }
   };
 
   return (
     <div className="h-screen flex overflow-hidden bg-[var(--bg)]">
       {/* Left Sidebar - resizable */}
-      <ResizablePanel side="left" defaultWidth={240} minWidth={180} maxWidth={360}>
+      <ResizablePanel side="left" defaultWidth={240} minWidth={180} maxWidth={360} tabLabel="Menu">
         <LeftSidebar
           activeTab={store.activeTab}
           onTabChange={store.setActiveTab}
@@ -111,25 +139,9 @@ export default function Home() {
           />
         )}
 
-        {/* Content + Right Panel */}
+        {/* Content area — each component manages its own Conf + Code panels via PlaygroundShell */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Canvas / content area + code panel below */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-hidden">
-              {renderContent()}
-            </div>
-            {showCodePanel && <CodePanel styles={store.styles} />}
-          </div>
-
-          {/* Right property panel - resizable */}
-          {showPropertyPanel && (
-            <ResizablePanel side="right" defaultWidth={300} minWidth={240} maxWidth={420}>
-              <PropertyEditor
-                styles={store.styles}
-                onUpdateStyle={store.updateStyle}
-              />
-            </ResizablePanel>
-          )}
+          {renderContent()}
         </div>
       </div>
     </div>

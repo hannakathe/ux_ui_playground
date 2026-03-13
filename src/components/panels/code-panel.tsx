@@ -1,14 +1,9 @@
 "use client";
 
 import type { ElementStyles } from "@/hooks/use-playground-store";
-import { CodeBlock } from "@/components/ui/code-block";
 import type { CodeOutput } from "@/lib/code-generators";
 
-interface CodePanelProps {
-  styles: ElementStyles;
-}
-
-function gen(s: ElementStyles) {
+export function generatePlaygroundCode(s: ElementStyles): CodeOutput[] {
   const flexProps = s.display === "flex" || s.display === "inline-flex";
 
   const htmlStyle = [
@@ -73,25 +68,12 @@ function gen(s: ElementStyles) {
     s.shadow !== "none" && `  boxShadow: "${s.shadow}",`, s.opacity < 100 && `  opacity: "${s.opacity / 100}",`,
   ].filter(Boolean).join("\n");
 
-  return {
-    html: `<div style="${htmlStyle}">\n  Content\n</div>`,
-    css: `.element {\n${cssLines}\n}`,
-    js: `const el = document.querySelector('.element');\nObject.assign(el.style, {\n${jsProps}\n});`,
-    react: `<div\n  style={{\n${reactProps}\n  }}\n>\n  Content\n</div>`,
-    tailwind: `<div className="${twCls.join(" ")}">\n  Content\n</div>`,
-    scss: `.element {\n${cssLines}\n}`,
-  };
-}
-
-export function CodePanel({ styles }: CodePanelProps) {
-  const code = gen(styles);
-  const outputs: CodeOutput[] = [
-    { language: "html", label: "HTML", syntaxLang: "html", code: code.html },
-    { language: "css", label: "CSS", syntaxLang: "css", code: code.css },
-    { language: "javascript", label: "JavaScript", syntaxLang: "javascript", code: code.js },
-    { language: "react", label: "React", syntaxLang: "jsx", code: code.react },
-    { language: "tailwind", label: "Tailwind", syntaxLang: "jsx", code: code.tailwind },
-    { language: "scss", label: "SCSS", syntaxLang: "scss", code: code.scss },
+  return [
+    { language: "html", label: "HTML", syntaxLang: "html", code: `<div style="${htmlStyle}">\n  Content\n</div>` },
+    { language: "css", label: "CSS", syntaxLang: "css", code: `.element {\n${cssLines}\n}` },
+    { language: "javascript", label: "JavaScript", syntaxLang: "javascript", code: `const el = document.querySelector('.element');\nObject.assign(el.style, {\n${jsProps}\n});` },
+    { language: "react", label: "React", syntaxLang: "jsx", code: `<div\n  style={{\n${reactProps}\n  }}\n>\n  Content\n</div>` },
+    { language: "tailwind", label: "Tailwind", syntaxLang: "jsx", code: `<div className="${twCls.join(" ")}">\n  Content\n</div>` },
+    { language: "scss", label: "SCSS", syntaxLang: "scss", code: `.element {\n${cssLines}\n}` },
   ];
-  return <CodeBlock outputs={outputs} />;
 }

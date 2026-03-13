@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CodeBlock } from "@/components/ui/code-block";
+import { PlaygroundShell } from "@/components/layout/playground-shell";
 import { cn } from "@/lib/utils";
 import type { CodeOutput } from "@/lib/code-generators";
 
@@ -95,113 +95,109 @@ export function LayoutPlayground() {
           gap: `${gridConfig.gap}px`,
         };
 
-  return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="flex-1 flex overflow-hidden">
-        {/* Preview */}
-        <div className="flex-1 bg-[var(--bg)] flex items-center justify-center p-10 overflow-auto">
-          <div
-            className="w-full max-w-3xl min-h-[400px] bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6"
-            style={containerStyle}
-          >
-            {Array.from({ length: itemCount }, (_, i) => (
-              <motion.div
-                key={i}
-                layout
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.05 }}
-                className={cn(
-                  "rounded-lg flex items-center justify-center text-white text-sm font-medium min-w-[60px] min-h-[60px]",
-                  colors[i % colors.length]
-                )}
-                style={{
-                  width: mode === "flexbox" ? (flexConfig.direction.includes("column") ? "100%" : undefined) : undefined,
-                  height: mode === "flexbox" ? (flexConfig.direction.includes("column") ? undefined : "60px") : "60px",
-                  padding: "16px",
-                }}
-              >
-                {i + 1}
-              </motion.div>
-            ))}
-          </div>
+  const configUI = (
+    <>
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-400/80 mb-3">Layout Mode</p>
+        <div className="flex gap-1">
+          {(["flexbox", "grid"] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={cn(
+                "flex-1 py-2 text-sm rounded-lg transition-colors capitalize font-medium",
+                mode === m ? "bg-indigo-600 text-white" : "bg-[var(--surface-2)] text-[var(--muted)] hover:text-[var(--fg)]"
+              )}
+            >
+              {m}
+            </button>
+          ))}
         </div>
-
-        {/* Right controls */}
-        <aside className="w-72 bg-[var(--surface)] border-l border-[var(--border)] overflow-y-auto p-5 space-y-5">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-400/80 mb-3">Layout Mode</p>
-            <div className="flex gap-1">
-              {(["flexbox", "grid"] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setMode(m)}
-                  className={cn(
-                    "flex-1 py-2 text-sm rounded-lg transition-colors capitalize font-medium",
-                    mode === m ? "bg-indigo-600 text-white" : "bg-[var(--surface-2)] text-[var(--muted)] hover:text-[var(--fg)]"
-                  )}
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {mode === "flexbox" ? (
-            <div className="space-y-4">
-              {[
-                { label: "Direction", value: flexConfig.direction, key: "direction", options: [{ value: "row", label: "Row" }, { value: "column", label: "Column" }, { value: "row-reverse", label: "Row Reverse" }, { value: "column-reverse", label: "Column Reverse" }] },
-                { label: "Justify Content", value: flexConfig.justify, key: "justify", options: [{ value: "flex-start", label: "Start" }, { value: "center", label: "Center" }, { value: "flex-end", label: "End" }, { value: "space-between", label: "Space Between" }, { value: "space-around", label: "Space Around" }, { value: "space-evenly", label: "Space Evenly" }] },
-                { label: "Align Items", value: flexConfig.align, key: "align", options: [{ value: "flex-start", label: "Start" }, { value: "center", label: "Center" }, { value: "flex-end", label: "End" }, { value: "stretch", label: "Stretch" }, { value: "baseline", label: "Baseline" }] },
-                { label: "Wrap", value: flexConfig.wrap, key: "wrap", options: [{ value: "nowrap", label: "No Wrap" }, { value: "wrap", label: "Wrap" }, { value: "wrap-reverse", label: "Wrap Reverse" }] },
-              ].map((ctrl) => (
-                <div key={ctrl.key} className="space-y-2">
-                  <label className="text-xs text-[var(--fg)] font-medium">{ctrl.label}</label>
-                  <Select value={ctrl.value} onValueChange={(v) => setFlexConfig((p) => ({ ...p, [ctrl.key]: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {ctrl.options.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs text-[var(--fg)] font-medium">Gap</label>
-                  <NumberInput value={flexConfig.gap} onChange={(v) => setFlexConfig((p) => ({ ...p, gap: v }))} max={48} />
-                </div>
-                <Slider value={[flexConfig.gap]} min={0} max={48} onValueChange={([v]) => setFlexConfig((p) => ({ ...p, gap: v }))} />
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs text-[var(--fg)] font-medium">Items</label>
-                  <NumberInput value={flexConfig.itemCount} onChange={(v) => setFlexConfig((p) => ({ ...p, itemCount: v }))} min={1} max={12} unit="" />
-                </div>
-                <Slider value={[flexConfig.itemCount]} min={1} max={12} onValueChange={([v]) => setFlexConfig((p) => ({ ...p, itemCount: v }))} />
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {[
-                { label: "Columns", value: gridConfig.columns, key: "columns", max: 6 },
-                { label: "Rows", value: gridConfig.rows, key: "rows", max: 6 },
-                { label: "Gap", value: gridConfig.gap, key: "gap", max: 48 },
-                { label: "Items", value: gridConfig.itemCount, key: "itemCount", max: 12 },
-              ].map((ctrl) => (
-                <div key={ctrl.key} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <label className="text-xs text-[var(--fg)] font-medium">{ctrl.label}</label>
-                    <NumberInput value={ctrl.value} onChange={(v) => setGridConfig((p) => ({ ...p, [ctrl.key]: v }))} min={ctrl.key === "gap" ? 0 : 1} max={ctrl.max} unit={ctrl.key === "gap" ? "px" : ""} />
-                  </div>
-                  <Slider value={[ctrl.value]} min={ctrl.key === "gap" ? 0 : 1} max={ctrl.max} onValueChange={([v]) => setGridConfig((p) => ({ ...p, [ctrl.key]: v }))} />
-                </div>
-              ))}
-            </div>
-          )}
-        </aside>
       </div>
 
-      <CodeBlock outputs={codeOutputs} />
-    </div>
+      {mode === "flexbox" ? (
+        <div className="space-y-4">
+          {[
+            { label: "Direction", value: flexConfig.direction, key: "direction", options: [{ value: "row", label: "Row" }, { value: "column", label: "Column" }, { value: "row-reverse", label: "Row Reverse" }, { value: "column-reverse", label: "Column Reverse" }] },
+            { label: "Justify Content", value: flexConfig.justify, key: "justify", options: [{ value: "flex-start", label: "Start" }, { value: "center", label: "Center" }, { value: "flex-end", label: "End" }, { value: "space-between", label: "Space Between" }, { value: "space-around", label: "Space Around" }, { value: "space-evenly", label: "Space Evenly" }] },
+            { label: "Align Items", value: flexConfig.align, key: "align", options: [{ value: "flex-start", label: "Start" }, { value: "center", label: "Center" }, { value: "flex-end", label: "End" }, { value: "stretch", label: "Stretch" }, { value: "baseline", label: "Baseline" }] },
+            { label: "Wrap", value: flexConfig.wrap, key: "wrap", options: [{ value: "nowrap", label: "No Wrap" }, { value: "wrap", label: "Wrap" }, { value: "wrap-reverse", label: "Wrap Reverse" }] },
+          ].map((ctrl) => (
+            <div key={ctrl.key} className="space-y-2">
+              <label className="text-xs text-[var(--fg)] font-medium">{ctrl.label}</label>
+              <Select value={ctrl.value} onValueChange={(v) => setFlexConfig((p) => ({ ...p, [ctrl.key]: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {ctrl.options.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          ))}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-xs text-[var(--fg)] font-medium">Gap</label>
+              <NumberInput value={flexConfig.gap} onChange={(v) => setFlexConfig((p) => ({ ...p, gap: v }))} max={48} />
+            </div>
+            <Slider value={[flexConfig.gap]} min={0} max={48} onValueChange={([v]) => setFlexConfig((p) => ({ ...p, gap: v }))} />
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-xs text-[var(--fg)] font-medium">Items</label>
+              <NumberInput value={flexConfig.itemCount} onChange={(v) => setFlexConfig((p) => ({ ...p, itemCount: v }))} min={1} max={12} unit="" />
+            </div>
+            <Slider value={[flexConfig.itemCount]} min={1} max={12} onValueChange={([v]) => setFlexConfig((p) => ({ ...p, itemCount: v }))} />
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {[
+            { label: "Columns", value: gridConfig.columns, key: "columns", max: 6 },
+            { label: "Rows", value: gridConfig.rows, key: "rows", max: 6 },
+            { label: "Gap", value: gridConfig.gap, key: "gap", max: 48 },
+            { label: "Items", value: gridConfig.itemCount, key: "itemCount", max: 12 },
+          ].map((ctrl) => (
+            <div key={ctrl.key} className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="text-xs text-[var(--fg)] font-medium">{ctrl.label}</label>
+                <NumberInput value={ctrl.value} onChange={(v) => setGridConfig((p) => ({ ...p, [ctrl.key]: v }))} min={ctrl.key === "gap" ? 0 : 1} max={ctrl.max} unit={ctrl.key === "gap" ? "px" : ""} />
+              </div>
+              <Slider value={[ctrl.value]} min={ctrl.key === "gap" ? 0 : 1} max={ctrl.max} onValueChange={([v]) => setGridConfig((p) => ({ ...p, [ctrl.key]: v }))} />
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+
+  return (
+    <PlaygroundShell configPanel={configUI} codeOutputs={codeOutputs}>
+      <div className="flex-1 bg-[var(--bg)] flex items-center justify-center p-10 overflow-auto">
+        <div
+          className="w-full max-w-3xl min-h-[400px] bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6"
+          style={containerStyle}
+        >
+          {Array.from({ length: itemCount }, (_, i) => (
+            <motion.div
+              key={i}
+              layout
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.05 }}
+              className={cn(
+                "rounded-lg flex items-center justify-center text-white text-sm font-medium min-w-[60px] min-h-[60px]",
+                colors[i % colors.length]
+              )}
+              style={{
+                width: mode === "flexbox" ? (flexConfig.direction.includes("column") ? "100%" : undefined) : undefined,
+                height: mode === "flexbox" ? (flexConfig.direction.includes("column") ? undefined : "60px") : "60px",
+                padding: "16px",
+              }}
+            >
+              {i + 1}
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </PlaygroundShell>
   );
 }

@@ -17,8 +17,8 @@ const demos: { id: Demo; label: string }[] = [
 
 function DragDemo() {
   return (
-    <div className="relative w-80 h-80 bg-zinc-800/50 rounded-xl border border-dashed border-zinc-700 flex items-center justify-center">
-      <p className="absolute top-3 left-3 text-xs text-zinc-500">Drag within bounds</p>
+    <div className="relative w-80 h-80 bg-[var(--surface-2)] rounded-xl border border-dashed border-[var(--border-light)] flex items-center justify-center">
+      <p className="absolute top-3 left-3 text-xs text-[var(--muted)]">Drag within bounds</p>
       <motion.div
         drag
         dragConstraints={{ left: -100, right: 100, top: -100, bottom: 100 }}
@@ -77,7 +77,7 @@ function TapDemo() {
       >
         <span className="text-white text-lg font-bold">{taps}</span>
       </motion.button>
-      <p className="text-zinc-400 text-sm">Tap the circle</p>
+      <p className="text-[var(--muted)] text-sm">Tap the circle</p>
       <div className="flex gap-2">
         {[...Array(Math.min(taps, 10))].map((_, i) => (
           <motion.div
@@ -94,7 +94,7 @@ function TapDemo() {
 
 function ScrollDemo() {
   return (
-    <div className="w-80 h-80 overflow-y-auto bg-zinc-800/50 rounded-xl border border-zinc-700 p-4 space-y-4">
+    <div className="w-80 h-80 overflow-y-auto bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-4 space-y-4">
       {Array.from({ length: 8 }, (_, i) => (
         <motion.div
           key={i}
@@ -102,9 +102,9 @@ function ScrollDemo() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: false, amount: 0.5 }}
           transition={{ delay: 0.1 }}
-          className="h-16 bg-zinc-700/50 rounded-lg flex items-center px-4"
+          className="h-16 bg-[var(--surface)] rounded-lg flex items-center px-4 border border-[var(--border)]"
         >
-          <span className="text-zinc-300 text-sm">Scroll item {i + 1}</span>
+          <span className="text-[var(--fg)] text-sm">Scroll item {i + 1}</span>
         </motion.div>
       ))}
     </div>
@@ -122,7 +122,7 @@ function GestureChainDemo() {
             key={i}
             className={cn(
               "px-3 py-1 rounded-full text-xs",
-              step >= i ? "bg-indigo-600 text-white" : "bg-zinc-800 text-zinc-500"
+              step >= i ? "bg-indigo-600 text-white" : "bg-[var(--surface-2)] text-[var(--muted)]"
             )}
           >
             {s}
@@ -139,17 +139,17 @@ function GestureChainDemo() {
         whileTap={step === 1 ? { scale: 0.95 } : {}}
         className={cn(
           "w-32 h-32 rounded-xl flex items-center justify-center cursor-pointer",
-          step === 3 ? "bg-green-600" : step >= 2 ? "bg-purple-600" : "bg-zinc-700"
+          step === 3 ? "bg-green-600" : step >= 2 ? "bg-purple-600" : "bg-[var(--surface-2)]"
         )}
       >
-        <span className="text-white text-sm font-medium">
+        <span className="text-[var(--fg)] text-sm font-medium">
           {step === 0 ? "Hover" : step === 1 ? "Click" : step === 2 ? "Drag" : "Done!"}
         </span>
       </motion.div>
       {step === 3 && (
         <button
           onClick={() => setStep(0)}
-          className="text-xs text-zinc-400 hover:text-white"
+          className="text-xs text-[var(--muted)] hover:text-[var(--fg)]"
         >
           Reset
         </button>
@@ -171,7 +171,7 @@ function SwipeDemo() {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <p className="text-xs text-zinc-500 mb-2">Swipe cards left or right</p>
+      <p className="text-xs text-[var(--muted)] mb-2">Swipe cards left or right</p>
       <div className="relative w-64 h-80">
         {cards.map((card, i) => (
           <motion.div
@@ -195,7 +195,7 @@ function SwipeDemo() {
           <div className="absolute inset-0 flex items-center justify-center">
             <button
               onClick={() => setCards([0, 1, 2])}
-              className="px-4 py-2 bg-zinc-800 text-white text-sm rounded-lg"
+              className="px-4 py-2 bg-[var(--surface-2)] text-[var(--fg)] text-sm rounded-lg"
             >
               Reset
             </button>
@@ -222,27 +222,32 @@ export function InteractionsExplorer() {
 
   return (
     <div className="flex-1 flex overflow-hidden">
-      <div className="w-52 bg-zinc-950 border-r border-zinc-800 p-4 space-y-1">
-        <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">
-          Interactions
-        </p>
-        {demos.map((d) => (
-          <button
-            key={d.id}
-            onClick={() => setActiveDemo(d.id)}
-            className={cn(
-              "w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors",
-              activeDemo === d.id
-                ? "bg-zinc-800 text-white"
-                : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
-            )}
-          >
-            {d.label}
-          </button>
-        ))}
-      </div>
-      <div className="flex-1 bg-zinc-900 flex items-center justify-center">
+      <div className="flex-1 bg-[var(--bg)] flex items-center justify-center">
         {renderDemo()}
+      </div>
+
+      <div className="w-72 bg-[var(--surface)] border-l border-[var(--border)] overflow-y-auto p-5 space-y-6">
+        <div className="space-y-3">
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-400/80">
+            Interactions
+          </h3>
+          <div className="space-y-1">
+            {demos.map((d) => (
+              <button
+                key={d.id}
+                onClick={() => setActiveDemo(d.id)}
+                className={cn(
+                  "w-full text-left px-3 py-2 rounded-md text-sm transition-colors",
+                  activeDemo === d.id
+                    ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/20"
+                    : "text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-2)]"
+                )}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

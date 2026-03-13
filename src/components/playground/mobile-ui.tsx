@@ -341,28 +341,33 @@ export function MobileUI() {
 
   return (
     <div className="flex-1 flex overflow-hidden">
-      <div className="w-52 bg-zinc-950 border-r border-zinc-800 p-4 space-y-1">
-        <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">
-          Mobile Patterns
-        </p>
-        {screens.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => setActiveScreen(s.id)}
-            className={cn(
-              "w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors",
-              activeScreen === s.id
-                ? "bg-zinc-800 text-white"
-                : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
-            )}
-          >
-            {s.label}
-          </button>
-        ))}
+      {/* Pattern list - right side */}
+      <div className="flex-1 bg-[var(--bg)] flex items-center justify-center">
+        <PhoneFrame>{renderScreen()}</PhoneFrame>
       </div>
 
-      <div className="flex-1 bg-zinc-900 flex items-center justify-center">
-        <PhoneFrame>{renderScreen()}</PhoneFrame>
+      <div className="w-72 bg-[var(--surface)] border-l border-[var(--border)] overflow-y-auto p-5 space-y-6">
+        <div className="space-y-3">
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-400/80">
+            Mobile Patterns
+          </h3>
+          <div className="space-y-1">
+            {screens.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setActiveScreen(s.id)}
+                className={cn(
+                  "w-full text-left px-3 py-2 rounded-md text-sm transition-colors",
+                  activeScreen === s.id
+                    ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/20"
+                    : "text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-2)]"
+                )}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
