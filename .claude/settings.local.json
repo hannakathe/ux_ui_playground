@@ -10,7 +10,10 @@
       "Bash(cp -r src public ../ux_ui_playground/)",
       "Bash(npm install:*)",
       "Bash(npx next:*)",
-      "Bash(find /d/Hannah_Abril/Proyectos/Personales/Repositories_P/ux_ui_playground/src -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.css \\\\\\))"
+      "Bash(find /d/Hannah_Abril/Proyectos/Personales/Repositories_P/ux_ui_playground/src -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.css \\\\\\))",
+      "Bash(wc -l src/components/playground/*.tsx)",
+      "Bash(npx superpowers@latest init)",
+      "Bash(npm run:*)"
     ]
   }
 }

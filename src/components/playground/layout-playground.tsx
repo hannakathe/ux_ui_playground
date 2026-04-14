@@ -171,31 +171,53 @@ export function LayoutPlayground() {
 
   return (
     <PlaygroundShell configPanel={configUI} codeOutputs={codeOutputs}>
-      <div className="flex-1 bg-[var(--bg)] flex items-center justify-center p-10 overflow-auto">
-        <div
-          className="w-full max-w-3xl min-h-[400px] bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6"
-          style={containerStyle}
-        >
-          {Array.from({ length: itemCount }, (_, i) => (
-            <motion.div
-              key={i}
-              layout
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.05 }}
-              className={cn(
-                "rounded-lg flex items-center justify-center text-white text-sm font-medium min-w-[60px] min-h-[60px]",
-                colors[i % colors.length]
-              )}
-              style={{
-                width: mode === "flexbox" ? (flexConfig.direction.includes("column") ? "100%" : undefined) : undefined,
-                height: mode === "flexbox" ? (flexConfig.direction.includes("column") ? undefined : "60px") : "60px",
-                padding: "16px",
-              }}
-            >
-              {i + 1}
-            </motion.div>
-          ))}
+      <div className="flex-1 bg-[var(--bg)] flex flex-col items-center justify-center p-10 overflow-auto gap-4">
+        {/* CSS label */}
+        <div className="font-mono text-[11px] text-[var(--muted)] bg-[var(--surface)] border border-[var(--border)] rounded-lg px-3 py-1.5 self-start">
+          {mode === "flexbox"
+            ? `display: flex  |  direction: ${flexConfig.direction}  |  justify: ${flexConfig.justify}  |  align: ${flexConfig.align}  |  gap: ${flexConfig.gap}px`
+            : `display: grid  |  columns: ${gridConfig.columns}  |  rows: ${gridConfig.rows}  |  gap: ${gridConfig.gap}px`
+          }
+        </div>
+
+        {/* Container with visible boundary */}
+        <div className="w-full max-w-3xl relative">
+          <div
+            className="w-full min-h-[360px] border-2 border-dashed border-indigo-500/40 rounded-2xl p-6 bg-indigo-500/5 relative"
+            style={containerStyle}
+          >
+            {/* Container label */}
+            <span className="absolute -top-2.5 left-4 text-[10px] font-mono text-indigo-400/60 bg-[var(--bg)] px-2">
+              container
+            </span>
+
+            {itemCount === 0 ? (
+              <div className="flex-1 flex items-center justify-center text-[var(--muted)] text-sm">
+                No items — increase the item count
+              </div>
+            ) : (
+              Array.from({ length: itemCount }, (_, i) => (
+                <motion.div
+                  key={i}
+                  layout
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                  className={cn(
+                    "rounded-lg flex items-center justify-center text-white text-sm font-medium min-w-[60px] min-h-[60px]",
+                    colors[i % colors.length]
+                  )}
+                  style={{
+                    width: mode === "flexbox" ? (flexConfig.direction.includes("column") ? "100%" : undefined) : undefined,
+                    height: mode === "flexbox" ? (flexConfig.direction.includes("column") ? undefined : "60px") : "60px",
+                    padding: "16px",
+                  }}
+                >
+                  {i + 1}
+                </motion.div>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </PlaygroundShell>

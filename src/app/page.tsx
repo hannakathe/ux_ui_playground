@@ -35,6 +35,11 @@ export default function Home() {
     rotated: false,
   });
 
+  const playgroundCodeOutputs = useMemo(
+    () => generatePlaygroundCode(store.styles),
+    [store.styles]
+  );
+
   const showToolbar = store.activeTab !== "home";
 
   const handleSave = () => {
@@ -46,11 +51,6 @@ export default function Home() {
   if (store.activeTab === "home") {
     return <Hero onEnter={() => store.setActiveTab("playground")} />;
   }
-
-  const playgroundCodeOutputs = useMemo(
-    () => generatePlaygroundCode(store.styles),
-    [store.styles]
-  );
 
   const renderContent = () => {
     switch (store.activeTab) {

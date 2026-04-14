@@ -13,6 +13,10 @@ import {
   generateShades,
   hexToHsl,
   hslToHex,
+  hexToRgb,
+  rgbToHex,
+  hexToCmyk,
+  cmykToHex,
 } from "@/lib/color-utils";
 import { Slider } from "@/components/ui/slider";
 import { CodeBlock } from "@/components/ui/code-block";
@@ -94,12 +98,16 @@ function generateCodeOutputs(palette: string[]): CodeOutput[] {
   ];
 }
 
+type ColorFormat = "hex" | "rgb" | "hsl" | "cmyk";
+
 export function ColorPalette() {
   const [baseColor, setBaseColor] = useState("#6366f1");
   const [paletteType, setPaletteType] = useState<PaletteType>("monochromatic");
   const [hsl, setHsl] = useState(() => hexToHsl(baseColor));
+  const [colorFormat, setColorFormat] = useState<ColorFormat>("hex");
 
   const updateBaseColor = useCallback((hex: string) => {
+    if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
     setBaseColor(hex);
     setHsl(hexToHsl(hex));
   }, []);
@@ -272,18 +280,113 @@ export function ColorPalette() {
             <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-400/80 mb-3">
               Base Color
             </p>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <HexColorPicker
                 color={baseColor}
-                onChange={updateBaseColor}
+                onChange={(hex) => { setBaseColor(hex); setHsl(hexToHsl(hex)); }}
                 style={{ width: "100%" }}
               />
-              <input
-                type="text"
-                value={baseColor}
-                onChange={(e) => updateBaseColor(e.target.value)}
-                className="w-full h-8 px-3 rounded-md bg-[var(--surface-2)] border border-[var(--border)] text-sm text-[var(--fg)] font-mono"
-              />
+              {/* Format switcher */}
+              <div className="flex rounded-lg overflow-hidden border border-[var(--border)] text-[11px]">
+                {(["hex", "rgb", "hsl", "cmyk"] as ColorFormat[]).map((fmt) => (
+                  <button
+                    key={fmt}
+                    onClick={() => setColorFormat(fmt)}
+                    className={cn(
+                      "flex-1 py-1 uppercase font-semibold transition-colors",
+                      colorFormat === fmt
+                        ? "bg-indigo-600 text-white"
+                        : "text-[var(--muted)] hover:text-[var(--fg)] bg-[var(--surface-2)]"
+                    )}
+                  >
+                    {fmt}
+                  </button>
+                ))}
+              </div>
+              {/* Format-specific inputs */}
+              {colorFormat === "hex" && (
+                <input
+                  type="text"
+                  value={baseColor}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (/^#[0-9a-fA-F]{6}$/.test(v)) updateBaseColor(v);
+                    else setBaseColor(v);
+                  }}
+                  className="w-full h-8 px-3 rounded-md bg-[var(--surface-2)] border border-[var(--border)] text-sm text-[var(--fg)] font-mono"
+                />
+              )}
+              {colorFormat === "rgb" && (() => {
+                const [r, g, b] = hexToRgb(baseColor);
+                return (
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[{ label: "R", val: r, idx: 0 }, { label: "G", val: g, idx: 1 }, { label: "B", val: b, idx: 2 }].map(({ label, val, idx }) => (
+                      <div key={label} className="space-y-1">
+                        <span className="text-[10px] text-[var(--muted)] font-mono">{label}</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={255}
+                          value={val}
+                          onChange={(e) => {
+                            const rgb: [number, number, number] = [r, g, b];
+                            rgb[idx] = Math.max(0, Math.min(255, Number(e.target.value)));
+                            updateBaseColor(rgbToHex(...rgb));
+                          }}
+                          className="w-full h-8 px-2 rounded-md bg-[var(--surface-2)] border border-[var(--border)] text-xs text-[var(--fg)] font-mono"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+              {colorFormat === "hsl" && (
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[{ label: "H", val: hsl[0], max: 360, idx: 0 }, { label: "S", val: hsl[1], max: 100, idx: 1 }, { label: "L", val: hsl[2], max: 100, idx: 2 }].map(({ label, val, max, idx }) => (
+                    <div key={label} className="space-y-1">
+                      <span className="text-[10px] text-[var(--muted)] font-mono">{label}</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={max}
+                        value={val}
+                        onChange={(e) => {
+                          const newHsl: [number, number, number] = [...hsl];
+                          newHsl[idx] = Math.max(0, Math.min(max, Number(e.target.value)));
+                          const hex = hslToHex(newHsl[0], newHsl[1], newHsl[2]);
+                          setBaseColor(hex);
+                          setHsl(newHsl);
+                        }}
+                        className="w-full h-8 px-2 rounded-md bg-[var(--surface-2)] border border-[var(--border)] text-xs text-[var(--fg)] font-mono"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+              {colorFormat === "cmyk" && (() => {
+                const [c, m, y, k] = hexToCmyk(baseColor);
+                return (
+                  <div className="grid grid-cols-4 gap-1">
+                    {[{ label: "C", val: c, idx: 0 }, { label: "M", val: m, idx: 1 }, { label: "Y", val: y, idx: 2 }, { label: "K", val: k, idx: 3 }].map(({ label, val, idx }) => (
+                      <div key={label} className="space-y-1">
+                        <span className="text-[10px] text-[var(--muted)] font-mono">{label}</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={val}
+                          onChange={(e) => {
+                            const cmyk: [number, number, number, number] = [c, m, y, k];
+                            cmyk[idx] = Math.max(0, Math.min(100, Number(e.target.value)));
+                            updateBaseColor(cmykToHex(...cmyk));
+                          }}
+                          className="w-full h-8 px-1.5 rounded-md bg-[var(--surface-2)] border border-[var(--border)] text-xs text-[var(--fg)] font-mono"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
@@ -338,14 +441,18 @@ export function ColorPalette() {
               Color Info
             </p>
             <div className="space-y-2 text-xs text-[var(--muted)] font-mono">
-              <div className="flex justify-between">
-                <span>HEX</span>
-                <span className="text-[var(--fg)]">{baseColor}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>HSL</span>
-                <span className="text-[var(--fg)]">{hsl[0]}° {hsl[1]}% {hsl[2]}%</span>
-              </div>
+              {(() => {
+                const [r, g, b] = hexToRgb(baseColor);
+                const [c, m, y, k] = hexToCmyk(baseColor);
+                return (
+                  <>
+                    <div className="flex justify-between"><span>HEX</span><span className="text-[var(--fg)]">{baseColor}</span></div>
+                    <div className="flex justify-between"><span>RGB</span><span className="text-[var(--fg)]">{r}, {g}, {b}</span></div>
+                    <div className="flex justify-between"><span>HSL</span><span className="text-[var(--fg)]">{hsl[0]}° {hsl[1]}% {hsl[2]}%</span></div>
+                    <div className="flex justify-between"><span>CMYK</span><span className="text-[var(--fg)]">{c}% {m}% {y}% {k}%</span></div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>

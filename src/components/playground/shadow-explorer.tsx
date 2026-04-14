@@ -15,6 +15,16 @@ export function ShadowExplorer() {
   const [color, setColor] = useState("#000000");
   const [opacity, setOpacity] = useState(25);
   const [inset, setInset] = useState(false);
+  const [previewBg, setPreviewBg] = useState("#ffffff");
+
+  const previewBgOptions = [
+    { label: "White", value: "#ffffff" },
+    { label: "Light", value: "#f4f4f5" },
+    { label: "Gray", value: "#a1a1aa" },
+    { label: "Dark", value: "#27272a" },
+    { label: "Black", value: "#09090b" },
+    { label: "Indigo", value: "#3730a3" },
+  ];
 
   const r = parseInt(color.slice(1, 3), 16);
   const g = parseInt(color.slice(3, 5), 16);
@@ -92,13 +102,31 @@ export function ShadowExplorer() {
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="flex-1 flex overflow-hidden">
         {/* Preview area */}
-        <div className="flex-1 bg-[var(--bg)] flex items-center justify-center p-10 overflow-auto">
-          <div className="space-y-10">
+        <div className="flex-1 bg-[var(--bg)] flex flex-col items-center justify-center p-10 overflow-auto gap-8">
+          {/* Background picker */}
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-[var(--muted)] font-medium mr-1">Preview background</span>
+            {previewBgOptions.map((opt) => (
+              <button
+                key={opt.value}
+                title={opt.label}
+                onClick={() => setPreviewBg(opt.value)}
+                className="w-6 h-6 rounded-full border-2 transition-transform hover:scale-110"
+                style={{
+                  backgroundColor: opt.value,
+                  borderColor: previewBg === opt.value ? "#6366f1" : "transparent",
+                  outline: previewBg === opt.value ? "2px solid #6366f1" : "2px solid transparent",
+                  outlineOffset: "2px",
+                }}
+              />
+            ))}
+          </div>
+          <div className="space-y-10 flex flex-col items-center">
             <div
-              className="w-52 h-52 bg-[var(--surface-2)] rounded-xl flex items-center justify-center"
-              style={{ boxShadow: shadowValue }}
+              className="w-52 h-52 rounded-xl flex items-center justify-center transition-colors"
+              style={{ boxShadow: shadowValue, backgroundColor: previewBg }}
             >
-              <span className="text-[var(--muted)] text-sm">Preview</span>
+              <span className="text-sm font-medium" style={{ color: parseInt(previewBg.slice(1, 3), 16) > 127 ? "#18181b" : "#fafafa" }}>Preview</span>
             </div>
             <div className="flex gap-6 justify-center">
               {presets.slice(0, 4).map((p) => (
@@ -108,8 +136,8 @@ export function ShadowExplorer() {
                   onClick={() => applyPreset(p.value)}
                 >
                   <div
-                    className="w-16 h-16 bg-[var(--surface-2)] rounded-lg mb-2 group-hover:scale-105 transition-transform"
-                    style={{ boxShadow: p.value }}
+                    className="w-16 h-16 rounded-lg mb-2 group-hover:scale-105 transition-transform"
+                    style={{ boxShadow: p.value, backgroundColor: previewBg }}
                   />
                   <span className="text-[10px] text-[var(--muted)]">{p.name}</span>
                 </button>

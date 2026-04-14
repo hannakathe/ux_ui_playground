@@ -96,3 +96,34 @@ export function generateShades(hex: string, count: number = 9): string[] {
   }
   return shades;
 }
+
+export function hexToRgb(hex: string): [number, number, number] {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return [r, g, b];
+}
+
+export function rgbToHex(r: number, g: number, b: number): string {
+  return `#${Math.max(0, Math.min(255, r)).toString(16).padStart(2, "0")}${Math.max(0, Math.min(255, g)).toString(16).padStart(2, "0")}${Math.max(0, Math.min(255, b)).toString(16).padStart(2, "0")}`;
+}
+
+export function hexToCmyk(hex: string): [number, number, number, number] {
+  const [r, g, b] = hexToRgb(hex);
+  const rp = r / 255;
+  const gp = g / 255;
+  const bp = b / 255;
+  const k = 1 - Math.max(rp, gp, bp);
+  if (k === 1) return [0, 0, 0, 100];
+  const c = (1 - rp - k) / (1 - k);
+  const m = (1 - gp - k) / (1 - k);
+  const y = (1 - bp - k) / (1 - k);
+  return [Math.round(c * 100), Math.round(m * 100), Math.round(y * 100), Math.round(k * 100)];
+}
+
+export function cmykToHex(c: number, m: number, y: number, k: number): string {
+  const r = Math.round(255 * (1 - c / 100) * (1 - k / 100));
+  const g = Math.round(255 * (1 - m / 100) * (1 - k / 100));
+  const b = Math.round(255 * (1 - y / 100) * (1 - k / 100));
+  return rgbToHex(r, g, b);
+}
